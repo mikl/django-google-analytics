@@ -3,6 +3,7 @@ import unittest
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
+from django.template import Context, Template, TemplateSyntaxError
 from django.test import Client
 
 
@@ -140,3 +141,30 @@ if getattr(settings, 'GOOGLE_ANALYTICS_MODEL', False):
                               Analytics.objects.create,
                               site=self.site,
                               code=TEST_CODE_ANOTHER)
+
+        def test_templates(self):
+            context = Context({})
+            template = Template('{% load analytics %}{% analytics %}')
+
+            rendered = template.render(context)
+            self.assertEqual(rendered, '')
+
+            Analytics.objects.create(site=self.site,
+                                     code=TEST_CODE)
+            rendered = template.render(context)
+
+            assert TEST_CODE in rendered, rendered
+
+            template = Template(
+                '{%% load analytics %%}{%% analytics "%s" %%}' % TEST_CODE
+            )
+            rendered = template.render(context)
+
+            assert TEST_CODE in rendered, rendered
+
+            error_template = '{%% load analytics %%}'\
+                             '{%% analytics "%s" "%s" %%}' % (TEST_CODE,
+                                                              TEST_CODE)
+            self.assertRaises(TemplateSyntaxError,
+                              Template,
+                              error_template)
