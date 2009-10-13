@@ -28,6 +28,10 @@ class AnalyticsNode(Node):
             try:
                 code = site.analytics.code
             except ObjectDoesNotExist:
+                # If Analytics model object has not been created.
+                pass
+            except AttributeError:
+                # If the Analytics model is not loaded.
                 pass
 
         if not code:
