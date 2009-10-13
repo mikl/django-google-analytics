@@ -1,7 +1,4 @@
-from django.conf import settings
+from google_analytics.models import Analytics
 from django.contrib import admin
 
-if getattr(settings, 'GOOGLE_ANALYTICS_MODEL', False):
-    from google_analytics.models import Analytics
-    admin.site.register(Analytics)
-
+admin.site.register(Analytics)
