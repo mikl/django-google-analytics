@@ -1,4 +1,5 @@
 from django.contrib.sites.models import Site
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template import Library, Node, TemplateSyntaxError, Variable, \
@@ -20,9 +21,13 @@ class AnalyticsNode(Node):
         else:
             code = self.code
 
-        # If Google Analytics code is empty tries to load it from current
-        # site object
+        # If no code came with the template, try getting it from settings.py
         if not code:
+            code = getattr(settings, 'GOOGLE_ANALYTICS_CODE', False)
+
+        # If no code is available in the settings, try getting one from
+        # the site-model-based analytics setting.
+        if not code and getattr(settings, 'GOOGLE_ANALYTICS_MODEL', False):
             site = Site.objects.get_current()
 
             try:
@@ -53,4 +58,6 @@ def do_analytics(parser, token):
         raise TemplateSyntaxError, 'Usage: {% analytics ["UA-xxxxxx-x"] %}'
 
     return AnalyticsNode(code)
+
 register.tag('analytics', do_analytics)
+
